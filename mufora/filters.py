@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 from loguru import logger as log
 
-from aux import settings
+from mufora import settings
 
 
 def angles(center: np.ndarray, points: np.ndarray) -> np.ndarray:

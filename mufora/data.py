@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from loguru import logger as log
 
-from aux import settings
+from mufora import settings
 
 WHITELIST = [
     "raw_dry_dark_with_car_light",

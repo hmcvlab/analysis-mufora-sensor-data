@@ -11,7 +11,7 @@ import numpy as np
 import yaml
 from loguru import logger as log
 
-from aux import pose
+from mufora import pose
 
 DEFAULT_INTRINSICS = [
     481.0692443847656,

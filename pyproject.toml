@@ -1,0 +1,22 @@
+[project]
+name = "mufora"
+version = "0.0.0"
+keywords = ["analysis", "3d", "2d", "camera", "lidar"]
+description = "Library to analyse 3d and 2d camera and lidar data using a spherical target with a known radius."
+requires-python = ">=3.10"
+dependencies = [
+  "scikit-image",
+  "opencv-python",
+  "numpy<4.2",
+]
+
+[[project.authors]]
+name = "Valentino Behret"
+email = "valentino.behret@mailbox.org"
+
+[build-system]
+requires = ["setuptools>=62", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]

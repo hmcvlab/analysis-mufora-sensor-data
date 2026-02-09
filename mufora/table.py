@@ -9,37 +9,27 @@ from pathlib import Path
 
 import pandas as pd
 import pytz
-import sqlalchemy
 from loguru import logger as log
 
 
-
-
-def update(
+def save(
     df: pd.DataFrame,
     filename: Path,
     overwrite=True,
 ):
     """First load old table if exists then merge tables and replace online."""
-    if not overwrite and filename in tables[f"Tables_in_{database}"].values:
-        df_old = query2df(f"SELECT * FROM {filename}", sql_engine)
+    if not overwrite and filename.exists():
+        df_old = pd.read_csv(filename)
         df = df.reset_index()
         df = pd.concat([df_old, df]).drop_duplicates(keep="last", subset=["datetime"])
         log.info(f"Updating {filename} by adding {len(df)-len(df_old)} new rows.")
     else:
-        log.info(f"Push table {filename} to SQL server.")
+        filename.parent.mkdir(parents=True, exist_ok=True)
+        log.info(f"Save table {filename}.")
 
     log.info(f"Table info:\n{df.dtypes}")
 
-    df.to_csv( filename, index=False)
-
-
-def query2df(sql_query: str, sql_engine: sqlalchemy.engine.Engine) -> pd.DataFrame:
-    """Execute sql query."""
-    with sql_engine.begin() as conn:
-        query = sqlalchemy.text(sql_query)
-        df = pd.read_sql_query(query, conn)
-    return df
+    df.to_csv(filename, index=False)
 
 
 def folder2weather(filename: str) -> str:

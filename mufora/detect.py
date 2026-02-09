@@ -14,8 +14,8 @@ from loguru import logger as log
 from sklearn.neighbors import KDTree
 from transformers import DetrForObjectDetection, DetrImageProcessor
 
-from aux import filters
-from aux.settings import Calibration
+from mufora import filters
+from mufora.settings import Calibration
 
 ROOT = Path(__file__).parent.resolve()
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")

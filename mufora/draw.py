@@ -12,7 +12,7 @@ import open3d as o3d
 import pandas as pd
 from loguru import logger as log
 
-from aux import filters, pose
+from mufora import filters, pose
 
 COLORS = itertools.cycle(plt.colormaps["tab10"].colors)
 MARKERS = itertools.cycle(["o", "v", "x", "^", "<", ">", "s", "p", "P", "+"])

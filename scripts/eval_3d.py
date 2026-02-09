@@ -14,7 +14,7 @@ import pandas as pd
 from loguru import logger as log
 from rich.progress import Progress
 
-from aux import data, detect, draw, filters, settings, summary, table
+from mufora import aux, data, detect, draw, filters, settings, table
 
 DATA_ROOT = data.root() / "rawdata"
 DB_NAME = Path(__file__).stem
@@ -57,7 +57,7 @@ def _eval_point_cloud(filename: Path, row: pd.Series, args: argparse.Namespace):
     except RuntimeWarning as e:
         log.warning(f"Skipping {filename}: {e}")
         t4 = datetime.now()
-        log.debug(summary.times_summary([t0, t1, t2, t3, t4], "Time with exception"))
+        log.debug(aux.times_summary([t0, t1, t2, t3, t4], "Time with exception"))
         return {
             "inlier_ratio": np.nan,
             "radius_m": np.nan,
@@ -65,7 +65,7 @@ def _eval_point_cloud(filename: Path, row: pd.Series, args: argparse.Namespace):
             "n_total": pcd.shape[0],
         }
     t4 = datetime.now()
-    log.debug(summary.times_summary([t0, t1, t2, t3, t4], "Time for sphere detection"))
+    log.debug(aux.times_summary([t0, t1, t2, t3, t4], "Time for sphere detection"))
 
     if sphere.inlier_ratio > 1.0:
         log.error(f"Sphere inlier ratio > 1.0:\n{sphere}")
@@ -92,7 +92,7 @@ def _process_df(df_eval: pd.DataFrame, sensor: str, args: argparse.Namespace, en
 
     # If debug take 100 random rows
     if args.debug:
-        summary.summary_count(df)
+        aux.summary_count(df)
         df = df.sample(10)
 
     log.debug(f"Processing:\n{df.to_string()}")
@@ -121,7 +121,7 @@ def _process_df(df_eval: pd.DataFrame, sensor: str, args: argparse.Namespace, en
     log.debug(f"Results:\n{df.to_string()}")
 
     if not args.debug:
-        table.update(df, DB_NAME, engine, overwrite=False)
+        table.save(df, DB_NAME, engine, overwrite=False)
 
 
 def main(args: argparse.Namespace):

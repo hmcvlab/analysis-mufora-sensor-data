@@ -1,0 +1,16 @@
+{
+    "name": "computer-vision",
+    "image": "hmcvlab/computer-vision:latest",
+    "remoteUser": "ubuntu",
+    "postCreateCommand": "pip install -U pip && pip install -e .",
+    "containerEnv": {
+        "DISPLAY": "${localEnv:DISPLAY}"
+    },
+    "mounts": [
+        "source=/tmp,target=/tmp,type=bind,consistency=cached",
+        "source=/media,target=/media,type=bind,consistency=cached",
+        "source=/mnt,target=/mnt,type=bind,consistency=cached",
+        "source=${localEnv:HOME},target=/home/ubuntu,type=bind,consistency=cached"
+    ]
+}
+

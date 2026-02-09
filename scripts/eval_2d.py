@@ -13,7 +13,7 @@ import pandas as pd
 from loguru import logger as log
 from rich.progress import Progress
 
-from aux import data, detect, draw, pose, settings, summary, table
+from mufora import aux, data, detect, draw, pose, settings, table
 
 DATA_ROOT = data.root() / "rawdata"
 DB_NAME = Path(__file__).stem
@@ -81,7 +81,7 @@ def _process_df(df_eval: pd.DataFrame, sensor: str, args: argparse.Namespace, en
 
     # If debug take 100 random rows
     if args.debug:
-        summary.summary_count(df)
+        aux.summary_count(df)
         df = df.sample(10)
 
     log.debug(f"Processing:\n{df.to_string()}")
@@ -109,10 +109,10 @@ def _process_df(df_eval: pd.DataFrame, sensor: str, args: argparse.Namespace, en
     df[["n_total"]] = df[["n_total"]].astype(int)
 
     log.debug(f"Results:\n{df.to_string()}")
-    summary.summary_count(df[df["sensor"] == sensor], title=sensor)
+    aux.summary_count(df[df["sensor"] == sensor], title=sensor)
 
     if not args.debug:
-        table.update(df, DB_NAME, engine, overwrite=False)
+        table.save(df, DB_NAME, engine, overwrite=False)
 
 
 def main(args: argparse.Namespace):
@@ -128,7 +128,7 @@ def main(args: argparse.Namespace):
 
     # Collect metadata
     df_meta = table.query2df("SELECT * FROM metadata_2d", engine)
-    summary.summary_count(df_meta)
+    aux.summary_count(df_meta)
 
     # Run evaluation by detecting circles/spheres
     log.info(f"Evaluating {len(df_meta)} samples...")
