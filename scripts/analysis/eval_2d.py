@@ -28,7 +28,7 @@ def _row2filename(row: pd.Series, suffix: str) -> str:
     return str(filename)
 
 
-def _eval_image(filename: Path, row: pd.Series, args: argparse.Namespace):
+def _eval_image(filename: Path, row: pd.Series):
     """Process an image."""
     file_calib = filename.parent / "calib.yaml"
 
@@ -47,30 +47,9 @@ def _eval_image(filename: Path, row: pd.Series, args: argparse.Namespace):
     entropy = detect.normalized_pixel_entropy(image, gt)
     gt["entropy"] = entropy
 
-    try:
-        # Detect circles and store results
-        circles = detect.deep_circles(image)
-        circle = circles.iloc[0]
-    except RuntimeWarning as e:
-        log.warning(f"Skipping {filename}: {e}")
-        return {
-            "entropy": entropy,
-            "pos_m": np.nan,
-            "pos_px": np.nan,
-            "radius_px": np.nan,
-            "n_total": image.shape[0] * image.shape[1],
-        }
-
-    # Save sample image in debug mode
-    if args.debug:
-        image = draw.circles(image, circles)
-        cv2.imwrite(_row2filename(row, "png"), image)
-
     return {
         "entropy": entropy,
         "pos_m": pose.from_circle(gt, config),
-        "pos_px": circle[["x", "y"]].tolist(),
-        "radius_px": circle["radius"],
         "n_total": image.shape[0] * image.shape[1],
     }
 
@@ -95,17 +74,14 @@ def _process_df(df_eval: pd.DataFrame, sensor: str, args: argparse.Namespace):
             # Load settings
             filename = (DATA_ROOT / f"{row.filename}").resolve()
             df.loc[idx, ["datetime"]] = table.file2datetime(filename)
-            res = _eval_image(filename, row, args)
+            res = _eval_image(filename, row)
             df.loc[idx, ["metric"]] = res["entropy"]
             df.loc[idx, ["x_m", "y_m", "z_m"]] = res["pos_m"]
-            df.loc[idx, ["x_px", "y_px"]] = res["pos_px"]
-            df.loc[idx, ["radius_px"]] = res["radius_px"]
             df.loc[idx, ["n_total"]] = res["n_total"]
 
     # Adjust data types
-    df[["metric", "x_m", "y_m", "z_m", "x_px", "y_px", "radius_px"]] = df[
-        ["metric", "x_m", "y_m", "z_m", "x_px", "y_px", "radius_px"]
-    ].astype(float)
+    cols = ["metric", "x_m", "y_m", "z_m"]
+    df[cols] = df[cols].astype(float)
     df[["n_total"]] = df[["n_total"]].astype(int)
 
     log.debug(f"Results:\n{df.to_string()}")
