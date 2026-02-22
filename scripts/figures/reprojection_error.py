@@ -3,6 +3,7 @@ Created on Wed Jan 08 2025
 Copyright (c) 2025 Munich University of Applied Sciences
 """
 
+import argparse
 import json
 import pathlib
 from pathlib import Path
@@ -16,7 +17,7 @@ from loguru import logger as log
 from matplotlib.lines import Line2D
 from rich.progress import Progress
 
-from calib import draw, sql
+from mufora import data, draw
 
 ROOT = pathlib.Path(__file__).parent.parent.parent
 NAME = Path(__file__).stem
@@ -105,7 +106,7 @@ def _box_info(x_vals: np.ndarray) -> str:
     return f"{lower_edges} | {x_median:.2f} | {upper_edges}"
 
 
-def _get_data():
+def _get_data(args: argparse.Namespace):
     """Helper function to get data from SQL database."""
     calib_data = {}
     for file in sorted(ROOT.joinpath("data/calib").glob("*.json")):
@@ -114,9 +115,8 @@ def _get_data():
             year, month, day = file.stem.split("-")
             calib_data[f"{day}.{month}.{year}"] = data
 
-    engine = sql.engine(database="weather")
-    df_eval_2d = sql.query2df("SELECT * FROM eval_2d", engine).sort_values("datetime")
-    df_eval_3d = sql.query2df("SELECT * FROM eval_3d", engine).sort_values("datetime")
+    df_eval_2d = pd.read_csv(args.file_eval_2d).sort_values("datetime")
+    df_eval_3d = pd.read_csv(args.file_eval_3d).sort_values("datetime")
 
     # Add date str columns
     df_eval_2d["date"] = df_eval_2d["datetime"].dt.strftime("%d.%m.%Y")
@@ -143,9 +143,9 @@ def _get_data():
     return results_gt, results_meas
 
 
-def main():
+def main(args: argparse.Namespace):
     """Entry point."""
-    results_gt, results_meas = _get_data()
+    results_gt, results_meas = _get_data(args)
 
     # Create box plot for each day and group by sensor
     summaries = [[], []]
@@ -251,4 +251,11 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument(
+        "--file-eval-2d", type=Path, default=data.root() / "analysis/eval_2d.csv"
+    )
+    argparser.add_argument(
+        "--file-eval-3d", type=Path, default=data.root() / "analysis/eval_3d.csv"
+    )
+    main(argparser.parse_args())

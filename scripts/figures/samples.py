@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from loguru import logger as log
 
-from calib import data, sql
+from mufora import data, sql
 
 MIN_DATETIME = datetime(
     year=2024, month=2, day=28, hour=12, minute=10, tzinfo=timezone.utc
