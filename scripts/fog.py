@@ -3,21 +3,22 @@ Created on Thu Nov 07 2024
 Copyright (c) 2024 Munich University of Applied Sciences
 """
 
+import argparse
 import re
 from pathlib import Path
 
 import pandas as pd
 from loguru import logger as log
 
-from mufora import table
+from mufora import data, table
 
 ROOT = Path(__file__).parent.parent.parent
 
 
-def main():
+def main(args: argparse.Namespace):
     """Main function."""
     # File to import/export
-    files_fog = sorted(list(ROOT.glob("data/fog/*_fog.csv")))
+    files_fog = sorted(list(args.dir_input.glob("*_fog.csv")))
 
     # Load additional data
     df_fog = pd.DataFrame()
@@ -46,12 +47,15 @@ def main():
     df_fog = df_fog.drop_duplicates()
 
     # Export
-    table = "fog"
-    log.info(f"Exporting {table=} to SQL server...")
-    engine = table.engine(database="weather")
-    table.update(df_fog, table, engine, overwrite=True)
+    log.info(f"Exporting {table=} to {args.file_output}...")
+    table.save(df_fog, args.file_output)
     log.info("Done!")
 
 
 if __name__ == "__main__":
-    main()
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument("--dir-input", type=Path, default=ROOT / "data/fog")
+    argparser.add_argument(
+        "--file-output", type=Path, default=data.root() / "weather/fog.csv"
+    )
+    main(argparser.parse_args())

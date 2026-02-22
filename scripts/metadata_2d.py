@@ -92,8 +92,8 @@ def main(args: argparse.Namespace):
     log.info("Starting to generate metadata...")
 
     # Load additional data
-    engine = table.engine(database="weather")
-    df_2d = table.query2df("SELECT * FROM gt_2d", engine)
+    df_2d = pd.read_csv(args.file_gt_2d)
+    df_fog = pd.read_csv(args.file_fog)
 
     log.info(f"Loading gt_2d: {len(df_2d)}")
     log.info(f"Describe gt_2d: {df_2d.dtypes}")
@@ -113,7 +113,7 @@ def main(args: argparse.Namespace):
     df_meta = pd.DataFrame(metadata).sort_values("datetime")
 
     # Add fog data
-    df_meta = table.add_fog_intensity(df_meta)
+    df_meta = table.add_fog_intensity(df_meta, df_fog)
 
     # Check if all combinations of weather and distance are present
     aux.summary_count(df_meta[df_meta["sensor"] == "cam_l"], title="cam_l")
@@ -121,10 +121,19 @@ def main(args: argparse.Namespace):
 
     # Export
     if not args.debug:
-        table.save(df_meta, Path(__file__).stem, engine, overwrite=True)
+        table.save(df_meta, args.file_output)
 
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--debug", action="store_true")
+    argparser.add_argument(
+        "--file-gt-2d", type=Path, default=data.root() / "analysis/gt_2d.csv"
+    )
+    argparser.add_argument(
+        "--file-fog", type=Path, default=data.root() / "analysis/fog.csv"
+    )
+    argparser.add_argument(
+        "--file-output", type=Path, default=data.root() / "analysis/metadata_2d.csv"
+    )
     main(argparser.parse_args())

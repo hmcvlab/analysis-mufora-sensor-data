@@ -75,7 +75,7 @@ def _eval_image(filename: Path, row: pd.Series, args: argparse.Namespace):
     }
 
 
-def _process_df(df_eval: pd.DataFrame, sensor: str, args: argparse.Namespace, engine):
+def _process_df(df_eval: pd.DataFrame, sensor: str, args: argparse.Namespace):
     """Run evaluation on a dataframe and return the dataframe."""
     df = df_eval[df_eval["sensor"] == sensor]
 
@@ -112,7 +112,7 @@ def _process_df(df_eval: pd.DataFrame, sensor: str, args: argparse.Namespace, en
     aux.summary_count(df[df["sensor"] == sensor], title=sensor)
 
     if not args.debug:
-        table.save(df, DB_NAME, engine, overwrite=False)
+        table.save(df, args.file_output)
 
 
 def main(args: argparse.Namespace):
@@ -124,10 +124,9 @@ def main(args: argparse.Namespace):
     log.add(sys.stderr, level="DEBUG" if args.debug else "WARNING")
 
     log.info("Starting script...")
-    engine = table.engine(database="weather")
 
     # Collect metadata
-    df_meta = table.query2df("SELECT * FROM metadata_2d", engine)
+    df_meta = pd.read_csv(args.file_meta)
     aux.summary_count(df_meta)
 
     # Run evaluation by detecting circles/spheres
@@ -135,13 +134,19 @@ def main(args: argparse.Namespace):
 
     # Split dataframe into 10 parts
     if args.sensor in ["all", "cam_l"]:
-        _process_df(df_meta, "cam_l", args, engine)
+        _process_df(df_meta, "cam_l", args)
     if args.sensor in ["all", "cam_r"]:
-        _process_df(df_meta, "cam_r", args, engine)
+        _process_df(df_meta, "cam_r", args)
 
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--debug", action="store_true")
     argparser.add_argument("--sensor", choices=["all", "cam_l", "cam_r"], default="all")
+    argparser.add_argument(
+        "--file-meta", type=Path, default=data.root() / "analysis/metadata_2d.csv"
+    )
+    argparser.add_argument(
+        "--file-output", type=Path, default=data.root() / "analysis/eval_2d.csv"
+    )
     main(argparser.parse_args())

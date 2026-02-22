@@ -1,7 +1,6 @@
 {
     "name": "computer-vision",
     "image": "hmcvlab/computer-vision:3.2.7",
-    "remoteUser": "ubuntu",
     "postCreateCommand": "pip install -U pip && pip install -e .",
     "runArgs": [
         "--gpus=all"

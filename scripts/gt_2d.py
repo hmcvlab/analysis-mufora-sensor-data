@@ -84,7 +84,7 @@ def main(args: argparse.Namespace):
         if args.debug:
             dir_debug = Path("tmp/gt_2d")
             dir_debug.mkdir(exist_ok=True, parents=True)
-            img = cv2.imread(str(file_coco.parent / img_info.file_name))
+            img = cv2.imread(str(args.file_input.parent / img_info.file_name))
             draw_cirlce(img, row, dir_debug / f"{folder}.png")
 
     df = (

@@ -16,14 +16,12 @@ from rich.progress import Progress
 from mufora import aux, data, table
 
 
-def main():
+def main(args: argparse.Namespace):
     """Main function."""
-
-    dir_labels = data.root() / "annotate/ball/3d/labels"
 
     data_processed = []
     for sensor in ["qb2_0", "qb2_1"]:
-        files = list(dir_labels.glob(f"*_{sensor}.json"))
+        files = list(args.dir_input.glob(f"*_{sensor}.json"))
         with Progress() as progress:
             for file_gt in progress.track(
                 files, description="Processing", total=len(files)
@@ -83,20 +81,16 @@ def main():
     aux.summary_count(df_keep[df_keep["sensor"] == "qb2_1"], title="qb2_1")
 
     # Export
-    engine = table.engine(database="weather")
-    table.save(df_keep, table="gt_3d", sql_engine=engine)
+    table.save(df_keep, args.file_output)
 
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--debug", action="store_true")
     argparser.add_argument(
-        "--file-output", type=Path, default=data.root() / "analysis/gt_2d.csv"
+        "--file-output", type=Path, default=data.root() / "analysis/gt_3d.csv"
     )
     argparser.add_argument(
-        "--file-input",
-        type=Path,
-        default=data.root()
-        / "annotate/ball/2d/carissma-indoor-multi-cam.v2i.coco/_annotations.coco.json",
+        "--dir-input", type=Path, default=data.root() / "annotate/ball/3d/labels"
     )
     main(argparser.parse_args())

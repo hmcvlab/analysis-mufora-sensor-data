@@ -86,7 +86,7 @@ def _eval_point_cloud(filename: Path, row: pd.Series, args: argparse.Namespace):
     }
 
 
-def _process_df(df_eval: pd.DataFrame, sensor: str, args: argparse.Namespace, engine):
+def _process_df(df_eval: pd.DataFrame, sensor: str, args: argparse.Namespace):
     """Run evaluation on a dataframe and return the dataframe."""
     df = df_eval[df_eval["sensor"] == sensor]
 
@@ -121,7 +121,7 @@ def _process_df(df_eval: pd.DataFrame, sensor: str, args: argparse.Namespace, en
     log.debug(f"Results:\n{df.to_string()}")
 
     if not args.debug:
-        table.save(df, DB_NAME, engine, overwrite=False)
+        table.save(df, args.file_output)
 
 
 def main(args: argparse.Namespace):
@@ -133,19 +133,18 @@ def main(args: argparse.Namespace):
     log.add(sys.stderr, level="DEBUG" if args.debug else "WARNING")
 
     log.info("Starting script...")
-    engine = table.engine(database="weather")
 
     # Collect metadata
-    df_meta = table.query2df("SELECT * FROM metadata_3d", engine)
+    df_meta = pd.read_csv(args.file_meta)
 
     # Run evaluation by detecting circles/spheres
     log.info(f"Evaluating {len(df_meta)} samples...")
 
     # Split dataframe into 10 parts
     if args.sensor == "all" or args.sensor == "qb2_0":
-        _process_df(df_meta, "qb2_0", args, engine)
+        _process_df(df_meta, "qb2_0", args)
     if args.sensor == "all" or args.sensor == "qb2_1":
-        _process_df(df_meta, "qb2_1", args, engine)
+        _process_df(df_meta, "qb2_1", args)
 
     log.info("Done.")
 
@@ -154,4 +153,10 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--debug", action="store_true")
     argparser.add_argument("--sensor", choices=["all", "qb2_0", "qb2_1"], default="all")
+    argparser.add_argument(
+        "--file-meta", type=Path, default=data.root() / "analysis/metadata_3d.csv"
+    )
+    argparser.add_argument(
+        "--file-output", type=Path, default=data.root() / "analysis/eval_3d.csv"
+    )
     main(argparser.parse_args())

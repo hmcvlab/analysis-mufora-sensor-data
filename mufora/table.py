@@ -120,25 +120,24 @@ def folder2time(filename: str) -> str:
     return str_time[1:-1]
 
 
-def add_fog_intensity(df: pd.DataFrame):
+def add_fog_intensity(df_meta: pd.DataFrame, df_fog: pd.DataFrame):
     """Add fog intensity column."""
-    df["datetime"] = pd.to_datetime(df["datetime"], utc=True)
-    df = df.sort_values("datetime")
+    df_meta["datetime"] = pd.to_datetime(df_meta["datetime"], utc=True)
+    df_meta = df_meta.sort_values("datetime")
 
     # Convert fog datetime to UTC and rename idx into idx_file_fog
-    df_fog = query2df("SELECT * FROM fog", engine(database="weather"))
     df_fog["datetime"] = pd.to_datetime(df_fog["datetime"], utc=True)
     df_fog = df_fog.sort_values("datetime")
 
     # Merge fog visibility
     df_tmp = pd.merge_asof(
-        df[["datetime"]],
+        df_meta[["datetime"]],
         df_fog,
         on="datetime",
         direction="nearest",
         tolerance=pd.Timedelta("1s"),
     )
     df_tmp = df_tmp.set_index("datetime")
-    df = df.set_index("datetime")
-    df.update(df_tmp)
-    return df.reset_index()
+    df_meta = df_meta.set_index("datetime")
+    df_meta.update(df_tmp)
+    return df_meta.reset_index()
