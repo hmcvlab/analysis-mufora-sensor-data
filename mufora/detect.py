@@ -21,10 +21,6 @@ ROOT = Path(__file__).parent.resolve()
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 IMG_PROC = DetrImageProcessor.from_pretrained("facebook/detr-resnet-50")
 
-DIR_MODEL = f"{ROOT}/model"
-log.info(f"Loading model from {DIR_MODEL}")
-MODEL = DetrForObjectDetection.from_pretrained(DIR_MODEL)
-
 
 def pixel_variance(img: np.ndarray, row: pd.Series):
     """Compute pixel variance"""
@@ -90,7 +86,9 @@ def circles(img: np.ndarray, config: Calibration = Calibration()) -> pd.DataFram
     return circles_df
 
 
-def deep_circles(img: np.ndarray, device=DEVICE, model=MODEL) -> pd.DataFrame:
+def deep_circles(
+    img: np.ndarray, model: DetrForObjectDetection, device=DEVICE
+) -> pd.DataFrame:
     """Detect ball using deep learning model DETR trained on COCO data."""
     with torch.no_grad():
         # Preprocess image

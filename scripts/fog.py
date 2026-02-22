@@ -12,20 +12,23 @@ from loguru import logger as log
 
 from mufora import data, table
 
-ROOT = Path(__file__).parent.parent.parent
+ROOT = Path(__file__).parent.parent
 
 
 def main(args: argparse.Namespace):
     """Main function."""
     # File to import/export
     files_fog = sorted(list(args.dir_input.glob("*_fog.csv")))
+    if not files_fog:
+        raise ValueError("No fog files found.")
 
     # Load additional data
-    df_fog = pd.DataFrame()
+    dfs = []
     for file in sorted(files_fog):
         tmp = pd.read_csv(file)
         tmp["file_fog"] = file.stem
-        df_fog = pd.concat([df_fog, tmp])
+        dfs.append(tmp)
+    df_fog = pd.concat(dfs, ignore_index=True)
     df_fog["datetime"] = df_fog["datetime"].apply(
         lambda x: re.sub(r"[A-Z]|\(|\)", "", x)
     )
@@ -56,6 +59,6 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--dir-input", type=Path, default=ROOT / "data/fog")
     argparser.add_argument(
-        "--file-output", type=Path, default=data.root() / "weather/fog.csv"
+        "--file-output", type=Path, default=data.root() / "analysis/fog.csv"
     )
     main(argparser.parse_args())

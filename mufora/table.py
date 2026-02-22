@@ -126,7 +126,7 @@ def add_fog_intensity(df_meta: pd.DataFrame, df_fog: pd.DataFrame):
     df_meta = df_meta.sort_values("datetime")
 
     # Convert fog datetime to UTC and rename idx into idx_file_fog
-    df_fog["datetime"] = pd.to_datetime(df_fog["datetime"], utc=True)
+    df_fog["datetime"] = pd.to_datetime(df_fog["datetime"], utc=True, format="ISO8601")
     df_fog = df_fog.sort_values("datetime")
 
     # Merge fog visibility
