@@ -11,6 +11,7 @@ import pandas as pd
 import scipy
 import torch
 from loguru import logger as log
+from skimage import feature
 from sklearn.neighbors import KDTree
 from transformers import DetrForObjectDetection, DetrImageProcessor
 
@@ -46,6 +47,55 @@ def normalized_pixel_entropy(img: np.ndarray, row: pd.Series):
     if len(pixels) < 256:
         log.warning(f"Low pixel count: {len(pixels)}")
     return entropy
+
+
+def glcm(img: np.ndarray, row: pd.Series):
+    """Compute gray level co-occurrence matrix.
+    Args:
+        img (np.ndarray): Image row (pd.Series): Row of dataframe
+
+    Sources:
+        [1] Haralick, R.M., Shanmugam, K., Dinstein, I. (1973). "Textural Features for
+            Image Classification."
+        [2] Clausi, D.A. (2002). "An analysis of co-occurrence texture statistics as a
+            function of grey level quantization." Canadian Journal of Remote Sensing
+        [3] Baraldi, A., Parmiggiani, F. (1995). "An investigation of the textural
+            characteristics associated with gray level cooccurrence matrix statistical
+            parameters."
+    """
+    radius = np.round(row["radius"]).astype(int)
+    sub_img = img[
+        row["y"] - radius : row["y"] + radius,
+        row["x"] - radius : row["x"] + radius,
+    ]
+
+    #  Multiple distances are recommended in [1] and the smallest radius in our dataset
+    #  is 3
+    distances = [1, 2, 3]
+
+    # Angles are recommended in [2]
+    angles = [0, np.pi / 4, np.pi / 2, 3 * np.pi / 4]
+
+    # 1. Calculate GLCM with multiple distances and angles
+    glcm = feature.graycomatrix(sub_img, distances, angles, normed=True)
+
+    # 2. Extract GLCM properties as recommended in [3]
+    features = {}
+    for prop in [
+        "contrast",
+        "dissimilarity",
+        "homogeneity",
+        "energy",
+        "correlation",
+        "entropy",
+    ]:
+        # 3. Analyze the texture features
+        tmp_feature = feature.graycoprops(glcm, prop).flatten()
+
+        # You can average across distances and angles for a simple representation
+        features[prop] = np.mean(tmp_feature)
+
+    return features
 
 
 def circles(img: np.ndarray, config: Calibration = Calibration()) -> pd.DataFrame:

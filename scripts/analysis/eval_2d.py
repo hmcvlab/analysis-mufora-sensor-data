@@ -34,7 +34,7 @@ def _eval_image(filename: Path, row: pd.Series):
 
     # Load settings and image
     config = settings.from_files(file_calib)
-    image = cv2.imread(str(filename), cv2.IMREAD_COLOR)
+    img = cv2.imread(str(filename), cv2.IMREAD_GRAYSCALE)
 
     # Detect circle in 3D with GT 2D annotations
     gt = row.rename(
@@ -44,13 +44,17 @@ def _eval_image(filename: Path, row: pd.Series):
             "y_gt_px": "y",
         }
     )
-    entropy = detect.normalized_pixel_entropy(image, gt)
+    entropy = detect.normalized_pixel_entropy(img, gt)
     gt["entropy"] = entropy
+
+    # GLCM features
+    glcm = detect.glcm(img, gt)
 
     return {
         "entropy": entropy,
         "pos_m": pose.from_circle(gt, config),
-        "n_total": image.shape[0] * image.shape[1],
+        "n_total": img.shape[0] * img.shape[1],
+        "glcm": glcm,
     }
 
 
@@ -78,6 +82,10 @@ def _process_df(df_eval: pd.DataFrame, sensor: str, args: argparse.Namespace):
             df.loc[idx, ["metric"]] = res["entropy"]
             df.loc[idx, ["x_m", "y_m", "z_m"]] = res["pos_m"]
             df.loc[idx, ["n_total"]] = res["n_total"]
+
+            # Add GLCM features
+            for k, v in res["glcm"].items():
+                df.loc[idx, [f"glcm_{k}"]] = v
 
     # Adjust data types
     cols = ["metric", "x_m", "y_m", "z_m"]
