@@ -63,10 +63,12 @@ def glcm(img: np.ndarray, row: pd.Series):
             characteristics associated with gray level cooccurrence matrix statistical
             parameters."
     """
+    x = np.round(row["x"]).astype(int)
+    y = np.round(row["y"]).astype(int)
     radius = np.round(row["radius"]).astype(int)
     sub_img = img[
-        row["y"] - radius : row["y"] + radius,
-        row["x"] - radius : row["x"] + radius,
+        y - radius : y + radius,
+        x - radius : x + radius,
     ]
 
     #  Multiple distances are recommended in [1] and the smallest radius in our dataset

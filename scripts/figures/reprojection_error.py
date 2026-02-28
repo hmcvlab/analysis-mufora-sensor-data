@@ -17,7 +17,7 @@ from loguru import logger as log
 from matplotlib.lines import Line2D
 from rich.progress import Progress
 
-from mufora import data, draw
+from mufora import aux, data, draw
 
 ROOT = pathlib.Path(__file__).parent.parent.parent
 NAME = Path(__file__).stem
@@ -52,9 +52,20 @@ def _reprojection_errors(df_2d, df_3d, calib_data, cols_3d_lidar) -> dict:
             ]
 
             results[date] = {}
+            df_sub = df_3d[df_3d["date"] == date]
             for sensor in ["qb2_0", "qb2_1"]:
-                df_lidar = df_3d[(df_3d["sensor"] == sensor) & (df_3d["date"] == date)]
+                df_lidar = df_sub[(df_sub["sensor"] == sensor)]
                 df_lidar = df_lidar[["datetime"] + cols_3d_lidar]
+
+                # Check that dataframe is not empty
+                if df_lidar.empty:
+                    df_debug = df_3d[["sensor", "date"]].pivot_table(
+                        index="date",
+                        columns="sensor",
+                        aggfunc="size",
+                        fill_value=0,
+                    )
+                    raise ValueError(f"Empty dataframe for {sensor}:\n{df_debug}")
 
                 # Deproject points into image frame
                 xyz = df_lidar[cols_3d_lidar].to_numpy()
@@ -117,6 +128,8 @@ def _get_data(args: argparse.Namespace):
 
     df_eval_2d = pd.read_csv(args.file_eval_2d).sort_values("datetime")
     df_eval_3d = pd.read_csv(args.file_eval_3d).sort_values("datetime")
+    df_eval_2d["datetime"] = pd.to_datetime(df_eval_2d["datetime"], utc=True)
+    df_eval_3d["datetime"] = pd.to_datetime(df_eval_3d["datetime"], utc=True)
 
     # Add date str columns
     df_eval_2d["date"] = df_eval_2d["datetime"].dt.strftime("%d.%m.%Y")

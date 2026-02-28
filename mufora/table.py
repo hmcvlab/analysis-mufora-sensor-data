@@ -21,7 +21,9 @@ def save(
     if not overwrite and filename.exists():
         df_old = pd.read_csv(filename)
         df = df.reset_index()
-        df = pd.concat([df_old, df]).drop_duplicates(keep="last", subset=["datetime"])
+        df = pd.concat([df_old, df]).drop_duplicates(
+            keep="last", subset=["datetime", "sensor"]
+        )
         log.info(f"Updating {filename} by adding {len(df)-len(df_old)} new rows.")
     else:
         filename.parent.mkdir(parents=True, exist_ok=True)
