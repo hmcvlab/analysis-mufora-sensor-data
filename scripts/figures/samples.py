@@ -5,6 +5,7 @@ Copyright (c) 2024 Munich University of Applied Sciences
 Script to generate plots from csv files.
 """
 
+import argparse
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -13,7 +14,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from loguru import logger as log
 
-from mufora import data, sql
+from mufora import data
 
 MIN_DATETIME = datetime(
     year=2024, month=2, day=28, hour=12, minute=10, tzinfo=timezone.utc
@@ -127,12 +128,11 @@ def figure_samples(df_meta: pd.DataFrame):
     fig.savefig(file_img, bbox_inches="tight")
 
 
-def main():
+def main(args: argparse.Namespace):
     """In thew main function all relevant table are loaded for plotting."""
 
     # Read SQL data
-    engine = sql.engine(database="weather")
-    df_meta = sql.query2df("SELECT * FROM metadata_2d", engine)
+    df_meta = pd.read_csv(args.file_meta_2d)
 
     df_meta["datetime"] = pd.to_datetime(df_meta["datetime"], utc=True)
     df_meta["day"] = df_meta["datetime"].dt.date
@@ -142,4 +142,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument(
+        "--file-meta-2d", type=Path, default=data.root() / "analysis/metadata_2d.csv"
+    )
+    main(argparser.parse_args())
