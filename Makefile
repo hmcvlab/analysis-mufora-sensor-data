@@ -14,9 +14,11 @@ lint:
 
 test:
 	docker run --rm  \
-		-v ${PWD}:/app \
-		-t ${URL}/computer-vision:latest \
-		sh -c "pytest"
+		--user ubuntu \
+		-w /app \
+		-v .:/app \
+		-t hmcvlab/computer-vision:3.2.7 \
+		bash -c "pip install -e . && pytest"
 
 install-hooks:
 	@echo "make format && make lint" > .git/hooks/pre-commit
