@@ -56,3 +56,20 @@ def summary_count(df: pd.DataFrame, title: str = ""):
         + f"\nNumber of datapoints for each combination:\n{df_grouped}\n"
         + "=" * 80
     )
+
+
+def summary_sensor_date(df: pd.DataFrame):
+    """Check all combinations of sensor and date"""
+    df_grouped = df[["sensor", "date"]].pivot_table(
+        index="date",
+        columns="sensor",
+        aggfunc="size",
+        fill_value=0,
+    )
+
+    log.info(
+        "\n"
+        + "Evaluation".center(80, "=")
+        + f"\nNumber of datapoints for each combination:\n{df_grouped}\n"
+        + "=" * 80
+    )

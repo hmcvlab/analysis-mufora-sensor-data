@@ -13,7 +13,7 @@ import pandas as pd
 from loguru import logger as log
 from rich.progress import Progress
 
-from mufora import aux, data, detect, draw, pose, settings, table
+from mufora import aux, data, detect, pose, settings, table
 
 DATA_ROOT = data.root() / "rawdata"
 DB_NAME = Path(__file__).stem

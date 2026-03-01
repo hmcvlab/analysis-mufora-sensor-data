@@ -1,7 +1,7 @@
 {
     "name": "computer-vision",
     "image": "hmcvlab/computer-vision:3.2.7",
-    "postCreateCommand": "pip install -U pip && pip install -e .",
+    "postCreateCommand": "pip install -U pip && pip install -e . && chown -R ubuntu:ubuntu .",
     "runArgs": [
         "--gpus=all"
     ],

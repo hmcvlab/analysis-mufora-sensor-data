@@ -79,7 +79,7 @@ def glcm(img: np.ndarray, row: pd.Series):
     angles = [0, np.pi / 4, np.pi / 2, 3 * np.pi / 4]
 
     # 1. Calculate GLCM with multiple distances and angles
-    glcm = feature.graycomatrix(sub_img, distances, angles, normed=True)
+    glcm_mats = feature.graycomatrix(sub_img, distances, angles, normed=True)
 
     # 2. Extract GLCM properties as recommended in [3]
     features = {}
@@ -92,7 +92,7 @@ def glcm(img: np.ndarray, row: pd.Series):
         "entropy",
     ]:
         # 3. Analyze the texture features
-        tmp_feature = feature.graycoprops(glcm, prop).flatten()
+        tmp_feature = feature.graycoprops(glcm_mats, prop).flatten()
 
         # You can average across distances and angles for a simple representation
         features[prop] = np.mean(tmp_feature)

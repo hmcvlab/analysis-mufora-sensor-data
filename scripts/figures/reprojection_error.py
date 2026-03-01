@@ -17,7 +17,7 @@ from loguru import logger as log
 from matplotlib.lines import Line2D
 from rich.progress import Progress
 
-from mufora import aux, data, draw
+from mufora import data, draw
 
 ROOT = pathlib.Path(__file__).parent.parent.parent
 NAME = Path(__file__).stem
@@ -174,8 +174,8 @@ def main(args: argparse.Namespace):
         # Draw vertical line
         ax[j].axhline(np.median(all_values), color="red", linestyle="--")
 
-        for idx, (date, data) in enumerate(results.items()):
-            x_vals = list(data.values())
+        for idx, (date, sub_data) in enumerate(results.items()):
+            x_vals = list(sub_data.values())
             pos = 2 * idx + 1
             positions = [pos - 0.2, pos + 0.5]
             for x_val, pos, color in zip(x_vals, positions, colors):
@@ -243,7 +243,8 @@ def main(args: argparse.Namespace):
 
     # Common x-axis-label
     # fig.supylabel("Reprojection error in px")
-    date_labels = [date[:-5] for date, _ in results_gt]
+    print(results_gt.keys())
+    date_labels = [date[:-5] for date in results_gt.keys()]
     ax[0].set_ylabel("Reprojection error in px")
     ax[0].set_xticklabels(date_labels, rotation=0)
     ax[1].set_xticklabels(date_labels, rotation=0)

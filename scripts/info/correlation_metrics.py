@@ -8,13 +8,16 @@ from pathlib import Path
 
 import pandas as pd
 
-from mufora import data
+from mufora import aux, data
 
 
 def main(args):
     """Entrypoint."""
     df_eval = pd.read_csv(args.file)
+    df_eval["datetime"] = pd.to_datetime(df_eval["datetime"], utc=True)
+    df_eval["date"] = df_eval["datetime"].dt.date
     print(df_eval.info())
+    aux.summary_sensor_date(df_eval)
 
     # Extract metrics columns: distance, intensity, metric and all that start with glcm_
     metric_cols = [c for c in df_eval.columns if c.startswith("glcm_")]
