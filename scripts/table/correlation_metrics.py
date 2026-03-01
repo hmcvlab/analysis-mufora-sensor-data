@@ -23,9 +23,22 @@ def main(args):
     metric_cols = [c for c in df_eval.columns if c.startswith("glcm_")]
     df_eval = df_eval[["distance", "intensity", "metric", "weather"] + metric_cols]
 
-    for weather, sub_df in df_eval.groupby("weather"):
-        print(f"\n{weather}")
-        print(sub_df.drop("weather", axis=1).corr().head(2))
+    # Group by weather and drop redundant columns
+    dfs = []
+    for weather in ["rain", "fog"]:
+        sub_df = df_eval[df_eval["weather"] == weather]
+        df_res = sub_df.drop("weather", axis=1).corr().head(2).round(2).reset_index()
+        df_res["weather"] = weather
+        df_res.drop(["distance", "intensity"], axis=1, inplace=True)
+        dfs.append(df_res)
+
+    df_res = pd.concat(dfs, axis=0)
+
+    # Set index and weather and multi-index
+    df_res = df_res.sort_values(["index", "weather"])
+    df_res.set_index(["index", "weather"], inplace=True)
+
+    print(df_res)
 
 
 if __name__ == "__main__":
