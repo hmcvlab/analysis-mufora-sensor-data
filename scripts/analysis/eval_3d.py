@@ -31,12 +31,22 @@ def _row2filename(row: pd.Series, suffix: str) -> str:
 
 def _eval_point_cloud(filename: Path, row: pd.Series, args: argparse.Namespace):
     """Process a point cloud."""
+    results = {
+        "inlier_ratio": np.nan,
+        "quality": np.nan,
+        "radius_m": np.nan,
+        "x_m": np.nan,
+        "y_m": np.nan,
+        "z_m": np.nan,
+    }
+
     t0 = datetime.now()
     file_calib = filename.parent / "calib.yaml"
     config = settings.from_files(file_calib)
 
     t1 = datetime.now()
     pcd = np.array(o3d.io.read_point_cloud(str(filename)).points)
+    results["n_total"] = pcd.shape[0]
 
     t2 = datetime.now()
     gt = row.rename(
@@ -58,12 +68,7 @@ def _eval_point_cloud(filename: Path, row: pd.Series, args: argparse.Namespace):
         log.warning(f"Skipping {filename}: {e}")
         t4 = datetime.now()
         log.debug(aux.times_summary([t0, t1, t2, t3, t4], "Time with exception"))
-        return {
-            "inlier_ratio": np.nan,
-            "radius_m": np.nan,
-            "pos_m": np.nan,
-            "n_total": pcd.shape[0],
-        }
+        return results
     t4 = datetime.now()
     log.debug(aux.times_summary([t0, t1, t2, t3, t4], "Time for sphere detection"))
 
@@ -78,12 +83,16 @@ def _eval_point_cloud(filename: Path, row: pd.Series, args: argparse.Namespace):
 
         o3d.io.write_point_cloud(_row2filename(row, "pcd"), pcd_o3d)
 
-    return {
-        "inlier_ratio": sphere.inlier_ratio,
-        "radius_m": sphere.radius,
-        "pos_m": sphere.center,
-        "n_total": pcd.shape[0],
-    }
+    results["inlier_ratio"] = sphere.inlier_ratio
+    results["quality"] = sphere.quality
+    results["radius_m"] = sphere.radius
+
+    if not np.isnan(sphere.center).any():
+        results["x_m"] = sphere.center[0]
+        results["y_m"] = sphere.center[1]
+        results["z_m"] = sphere.center[2]
+
+    return results
 
 
 def _process_df(df_eval: pd.DataFrame, sensor: str, args: argparse.Namespace):
@@ -107,15 +116,10 @@ def _process_df(df_eval: pd.DataFrame, sensor: str, args: argparse.Namespace):
             filename = (DATA_ROOT / f"{row.filename}").resolve()
             res = _eval_point_cloud(filename, row, args)
             df.loc[idx, ["datetime"]] = table.file2datetime(filename)
-            df.loc[idx, ["metric"]] = res["inlier_ratio"]
-            df.loc[idx, ["x_m", "y_m", "z_m"]] = res["pos_m"]
-            df.loc[idx, ["radius_m"]] = res["radius_m"]
-            df.loc[idx, ["n_total"]] = res["n_total"]
+            for k, v in res.items():
+                df.loc[idx, [k]] = v
 
     # Adjust data types
-    df[["metric", "x_m", "y_m", "z_m", "radius_m"]] = df[
-        ["metric", "x_m", "y_m", "z_m", "radius_m"]
-    ].astype(float)
     df[["n_total"]] = df[["n_total"]].astype(int)
 
     log.debug(f"Results:\n{df.to_string()}")

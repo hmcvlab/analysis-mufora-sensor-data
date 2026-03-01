@@ -5,16 +5,18 @@ Copyright (c) 2024 Munich University of Applied Sciences
 Script to generate plots from csv files.
 """
 
+import argparse
 import itertools
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from loguru import logger as log
 
-from calib import aux, draw, sql
+from mufora import aux, data, draw
 
 MIN_DATETIME = datetime(
     year=2024, month=2, day=28, hour=12, minute=10, tzinfo=timezone.utc
@@ -55,7 +57,7 @@ def _format_label(label: str):
 
 
 def _get_labels(df_weather: pd.DataFrame) -> list:
-    """Getlabels for y-axis of box plot"""
+    """Get labels for y-axis of box plot"""
     df_combo = (
         df_weather[["weather", "intensity"]]
         .drop_duplicates()
@@ -131,14 +133,14 @@ def _max_delta(sub_df: pd.DataFrame) -> dict:
     return max_deltas
 
 
-def group_plot(data: PlotData):
+def group_plot(plt_data: PlotData):
     """Save grouped plot"""
 
-    if data.df.empty:
+    if plt_data.df.empty:
         raise ValueError("Dataframe is empty")
 
     # Filter data
-    df_eval = data.df[["weather", "distance", "metric", "intensity"]]
+    df_eval = plt_data.df[["weather", "distance", "metric", "intensity"]]
 
     # Create bins depending on weather
     unique_distances = sorted(df_eval["distance"].unique())
@@ -154,7 +156,7 @@ def group_plot(data: PlotData):
     df_weather = df_weather.dropna(subset="intensity")
     df_weather["intensity"] = df_weather["intensity"].astype(int)
 
-    aux.summary_count(df_weather, title=data.name)
+    aux.summary_count(df_weather, title=plt_data.name)
 
     # All combinations
     all_indexes = _get_labels(df_weather)
@@ -248,9 +250,9 @@ def group_plot(data: PlotData):
         ax[idx].tick_params(axis="x", labelrotation=60)
         ax[idx].set_xticklabels(ax[idx].get_xticklabels(), ha="right")
 
-    fig.supylabel(data.x_label)
+    fig.supylabel(plt_data.x_label)
     fig.tight_layout()
-    fig.savefig(f"./tmp/{data.name}_distance.pdf", bbox_inches="tight")
+    fig.savefig(f"./tmp/{plt_data.name}_distance.pdf", bbox_inches="tight")
 
 
 def _filter(df: pd.DataFrame, is_valid: pd.Series, name: str):
@@ -328,13 +330,16 @@ def figure_metrics_2d(df_eval: pd.DataFrame):
     group_plot(cam)
 
 
-def main():
+def main(args: argparse.Namespace):
     """In thew main function all relevant table are loaded for plotting."""
 
     # Read SQL data
-    engine = sql.engine(database="weather")
-    df_eval_2d = sql.query2df("SELECT * FROM eval_2d", engine)
-    df_eval_3d = sql.query2df("SELECT * FROM eval_3d", engine)
+    df_eval_2d = pd.read_csv(args.file_eval_2d)
+    df_eval_3d = pd.read_csv(args.file_eval_3d)
+
+    # Choose metric
+    # df_eval_2d["metric"] = 1 - df_eval_2d["glcm_homogeneity"]
+    df_eval_3d["metric"] = df_eval_3d["quality"]
 
     # Preprocess tables
     df_eval_2d["datetime"] = pd.to_datetime(df_eval_2d["datetime"], utc=True)
@@ -346,4 +351,11 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument(
+        "--file-eval-2d", type=Path, default=data.root() / "analysis/eval_2d.csv"
+    )
+    argparser.add_argument(
+        "--file-eval-3d", type=Path, default=data.root() / "analysis/eval_3d.csv"
+    )
+    main(argparser.parse_args())
