@@ -15,7 +15,7 @@ from loguru import logger as log
 def save(
     df: pd.DataFrame,
     filename: Path,
-    overwrite=True,
+    overwrite=False,
 ):
     """First load old table if exists then merge tables and replace online."""
     if not overwrite and filename.exists():
