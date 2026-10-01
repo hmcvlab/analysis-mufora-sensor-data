@@ -1,0 +1,19 @@
+---
+name: test
+
+"on":
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container:
+      image: hmcvlab/computer-vision:3.2.7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install package
+        run: pip install -e .
+      - name: Run tests
+        run: pytest

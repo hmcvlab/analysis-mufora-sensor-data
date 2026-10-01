@@ -6,7 +6,8 @@
         "--gpus=all"
     ],
     "containerEnv": {
-        "DISPLAY": "${localEnv:DISPLAY}"
+        "DISPLAY": "${localEnv:DISPLAY}",
+        "MUFORA_ROOT": "${localEnv:MUFORA_ROOT}"
     },
     "mounts": [
         "source=/tmp,target=/tmp,type=bind,consistency=cached",

@@ -18,13 +18,15 @@ from rich import progress
 
 from mufora import aux, data, table
 
+ROOT = Path(__file__).parent.parent.parent
+
 
 def draw_cirlce(img: np.ndarray, row: dict, filename: str):
     """Compute pixel entropy"""
     mask = np.zeros(img.shape[:2], dtype=np.uint8)
     cv2.circle(
         mask,
-        tuple([int(row["x_px"]), int(row["y_px"])]),
+        (int(row["x_px"]), int(row["y_px"])),
         int(row["radius_px"]),
         255,
         -1,
@@ -125,7 +127,9 @@ if __name__ == "__main__":
     argparser.add_argument(
         "--file-input",
         type=Path,
-        default=data.root()
-        / "annotate/ball/2d/carissma-indoor-multi-cam.v2i.coco/_annotations.coco.json",
+        default=ROOT.joinpath(
+            "data/annotations/2d/carissma-indoor-multi-cam.v2i.coco",
+            "_annotations.coco.json",
+        ),
     )
     main(argparser.parse_args())

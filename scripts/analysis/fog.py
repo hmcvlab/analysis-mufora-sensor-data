@@ -12,13 +12,13 @@ from loguru import logger as log
 
 from mufora import data, table
 
-ROOT = Path(__file__).parent.parent
+ROOT = Path(__file__).parent.parent.parent
 
 
 def main(args: argparse.Namespace):
     """Main function."""
     # File to import/export
-    files_fog = sorted(list(args.dir_input.glob("*_fog.csv")))
+    files_fog = sorted(args.dir_input.glob("*_fog.csv"))
     if not files_fog:
         raise ValueError("No fog files found.")
 

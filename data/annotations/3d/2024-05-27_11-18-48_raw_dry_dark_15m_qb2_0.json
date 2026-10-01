@@ -1,0 +1,25 @@
+{
+	"folder": "pointclouds",
+	"filename": "2024-05-27_11-18-48_raw_dry_dark_15m_qb2_0.pcd",
+	"path": "/app/pointclouds/2024-05-27_11-18-48_raw_dry_dark_15m_qb2_0.pcd",
+	"objects": [
+		{
+			"name": "ball",
+			"centroid": {
+				"x": 1.24275412,
+				"y": 15.01616284,
+				"z": -2.67642065
+			},
+			"dimensions": {
+				"length": 0.64,
+				"width": 0.64,
+				"height": 0.64
+			},
+			"rotations": {
+				"x": 0,
+				"y": 0,
+				"z": 0
+			}
+		}
+	]
+}

@@ -1,0 +1,25 @@
+{
+	"folder": "pointclouds",
+	"filename": "2024-02-27_13-18-15_raw_rain_40mm_25m_qb2_0.pcd",
+	"path": "/app/pointclouds/2024-02-27_13-18-15_raw_rain_40mm_25m_qb2_0.pcd",
+	"objects": [
+		{
+			"name": "ball",
+			"centroid": {
+				"x": -5.50831872,
+				"y": 24.01926584,
+				"z": -5.48656705
+			},
+			"dimensions": {
+				"length": 0.64,
+				"width": 0.64,
+				"height": 0.64
+			},
+			"rotations": {
+				"x": 0,
+				"y": 0,
+				"z": 0
+			}
+		}
+	]
+}

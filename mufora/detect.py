@@ -20,7 +20,15 @@ from mufora.settings import Calibration
 
 ROOT = Path(__file__).parent.resolve()
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-IMG_PROC = DetrImageProcessor.from_pretrained("facebook/detr-resnet-50")
+_IMG_PROC = None
+
+
+def _image_processor() -> DetrImageProcessor:
+    """Lazily load the DETR image processor (downloads files on first call)."""
+    global _IMG_PROC  # pylint: disable=global-statement
+    if _IMG_PROC is None:
+        _IMG_PROC = DetrImageProcessor.from_pretrained("facebook/detr-resnet-50")
+    return _IMG_PROC
 
 
 def pixel_variance(img: np.ndarray, row: pd.Series):
@@ -100,8 +108,10 @@ def glcm(img: np.ndarray, row: pd.Series):
     return features
 
 
-def circles(img: np.ndarray, config: Calibration = Calibration()) -> pd.DataFrame:
+def circles(img: np.ndarray, config: Calibration | None = None) -> pd.DataFrame:
     """Detect circles using hough transformation"""
+    if config is None:
+        config = Calibration()
     img = img if img.ndim == 2 else cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     kernel = (config.hough_gauss_kernel, config.hough_gauss_kernel)
@@ -144,7 +154,8 @@ def deep_circles(
     """Detect ball using deep learning model DETR trained on COCO data."""
     with torch.no_grad():
         # Preprocess image
-        image_tensor = IMG_PROC(images=img, return_tensors="pt").to(device)
+        img_proc = _image_processor()
+        image_tensor = img_proc(images=img, return_tensors="pt").to(device)
 
         # Inference
         model.to(device)
@@ -152,7 +163,7 @@ def deep_circles(
 
         # Postprocess
         target_size = torch.tensor([img.shape[:2]])
-        results = IMG_PROC.post_process_object_detection(
+        results = img_proc.post_process_object_detection(
             pred, threshold=0.5, target_sizes=target_size
         )[0]
 

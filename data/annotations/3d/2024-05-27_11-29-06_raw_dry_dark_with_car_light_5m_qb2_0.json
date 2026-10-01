@@ -1,0 +1,25 @@
+{
+	"folder": "pointclouds",
+	"filename": "2024-05-27_11-29-06_raw_dry_dark_with_car_light_5m_qb2_0.pcd",
+	"path": "/app/pointclouds/2024-05-27_11-29-06_raw_dry_dark_with_car_light_5m_qb2_0.pcd",
+	"objects": [
+		{
+			"name": "ball",
+			"centroid": {
+				"x": -0.13581281,
+				"y": 5.52675829,
+				"z": -0.13894114
+			},
+			"dimensions": {
+				"length": 0.64,
+				"width": 0.64,
+				"height": 0.64
+			},
+			"rotations": {
+				"x": 0,
+				"y": 0,
+				"z": 0
+			}
+		}
+	]
+}

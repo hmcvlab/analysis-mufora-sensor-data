@@ -1,0 +1,25 @@
+{
+	"folder": "pointclouds",
+	"filename": "2024-02-26_07-14-42_raw_calib_qb2_0.pcd",
+	"path": "/app/pointclouds/2024-02-26_07-14-42_raw_calib_qb2_0.pcd",
+	"objects": [
+		{
+			"name": "ball",
+			"centroid": {
+				"x": -2.74,
+				"y": 8.62220267,
+				"z": -1.05691574
+			},
+			"dimensions": {
+				"length": 0.64,
+				"width": 0.64,
+				"height": 0.64
+			},
+			"rotations": {
+				"x": 0,
+				"y": 0,
+				"z": 0
+			}
+		}
+	]
+}

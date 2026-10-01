@@ -5,11 +5,24 @@ keywords = ["analysis", "3d", "2d", "camera", "lidar"]
 description = "Library to analyse 3d and 2d camera and lidar data using a spherical target with a known radius."
 requires-python = ">=3.10"
 dependencies = [
-  "scikit-image",
   "loguru",
-  "transformers",
+  "matplotlib",
+  "numpy",
   "open3d",
+  "opencv-python",
+  "pandas",
+  "pytz",
+  "pyyaml",
+  "rich",
+  "scikit-image",
+  "scikit-learn",
+  "scipy",
+  "torch",
+  "transformers",
 ]
+
+[project.optional-dependencies]
+dev = ["pytest"]
 
 [[project.authors]]
 name = "Valentino Behret"
@@ -21,6 +34,3 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["."]
-
-[tool.setuptools.package-data]
-"mufora" = ["model/*"]

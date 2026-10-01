@@ -1,0 +1,25 @@
+{
+	"folder": "pointclouds",
+	"filename": "2024-02-28_14-28-52_raw_fog_25m_qb2_1.pcd",
+	"path": "/app/pointclouds/2024-02-28_14-28-52_raw_fog_25m_qb2_1.pcd",
+	"objects": [
+		{
+			"name": "ball",
+			"centroid": {
+				"x": -4.02593915,
+				"y": 24.23567954,
+				"z": -5.56359935
+			},
+			"dimensions": {
+				"length": 0.64,
+				"width": 0.64,
+				"height": 0.64
+			},
+			"rotations": {
+				"x": 0,
+				"y": 0,
+				"z": 0
+			}
+		}
+	]
+}

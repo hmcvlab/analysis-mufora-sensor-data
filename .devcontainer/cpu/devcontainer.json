@@ -3,7 +3,8 @@
     "image": "hmcvlab/computer-vision:3.2.7",
     "postCreateCommand": "pip install -U pip && pip install -e .",
     "containerEnv": {
-        "DISPLAY": "${localEnv:DISPLAY}"
+        "DISPLAY": "${localEnv:DISPLAY}",
+        "MUFORA_ROOT": "${localEnv:MUFORA_ROOT}"
     },
     "mounts": [
         "source=/tmp,target=/tmp,type=bind,consistency=cached",

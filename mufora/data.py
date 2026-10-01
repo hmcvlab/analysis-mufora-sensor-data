@@ -3,7 +3,8 @@ Created on Tue Oct 08 2024
 Copyright (c) 2024 Munich University of Applied Sciences
 """
 
-from datetime import datetime
+import os
+from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -18,6 +19,7 @@ WHITELIST = [
     "raw_fog",
     "raw_rain",
 ]
+ENV_ROOT = "MUFORA_ROOT"
 PATHS = [
     Path("/mnt/data/"),
     Path("/mnt/labor/"),
@@ -26,13 +28,35 @@ PATHS = [
 ]
 
 
-def root():
-    return next(filter(lambda x: x.joinpath("rawdata").exists(), PATHS))
+def root() -> Path:
+    """Return the MuFoRa dataset root (the directory containing ``rawdata/``).
+
+    The ``MUFORA_ROOT`` environment variable takes precedence, otherwise the
+    first directory in ``PATHS`` containing ``rawdata/`` is used.
+    """
+    if env := os.environ.get(ENV_ROOT):
+        root_path = Path(env)
+        if not root_path.joinpath("rawdata").exists():
+            raise FileNotFoundError(
+                f"{ENV_ROOT}={env} does not contain a 'rawdata' directory."
+            )
+        return root_path
+
+    for path in PATHS:
+        if path.joinpath("rawdata").exists():
+            return path
+
+    raise FileNotFoundError(
+        "MuFoRa dataset root not found. None of the default search paths "
+        f"{[str(p) for p in PATHS]} contains a 'rawdata' directory. Download "
+        "the dataset (https://doi.org/10.5281/zenodo.15016480) and point "
+        f"{ENV_ROOT} to it, e.g. 'export {ENV_ROOT}=/path/to/mufora'."
+    )
 
 
 def relevant_raw_folders() -> list[Path]:
     """Find relevant folders for the project."""
-    folders = list(sorted(root().joinpath("rawdata").glob("*")))
+    folders = sorted(root().joinpath("rawdata").glob("*"))
     log.info(f"Found {len(folders)} folders")
     folders = list(filter(lambda x: x.is_dir(), folders))
     folders = list(filter(lambda x: any(fol in x.name for fol in WHITELIST), folders))
@@ -43,7 +67,7 @@ def relevant_raw_folders() -> list[Path]:
 def _filename2metadata(filename: Path) -> dict:
     """Extract metadata from filename."""
     file_parts = filename.stem.split("_")
-    date = datetime.fromtimestamp(float(file_parts[0]) / 1e9)
+    date = datetime.fromtimestamp(float(file_parts[0]) / 1e9, tz=timezone.utc)
     return {
         "datetime": date,
         "folder": str(filename.parent),

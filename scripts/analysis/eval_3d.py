@@ -5,7 +5,7 @@ Copyright (c) 2024 Munich University of Applied Sciences
 
 import argparse
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -40,15 +40,15 @@ def _eval_point_cloud(filename: Path, row: pd.Series, args: argparse.Namespace):
         "z_m": np.nan,
     }
 
-    t0 = datetime.now()
+    t0 = datetime.now(timezone.utc)
     file_calib = filename.parent / "calib.yaml"
     config = settings.from_files(file_calib)
 
-    t1 = datetime.now()
+    t1 = datetime.now(timezone.utc)
     pcd = np.array(o3d.io.read_point_cloud(str(filename)).points)
     results["n_total"] = pcd.shape[0]
 
-    t2 = datetime.now()
+    t2 = datetime.now(timezone.utc)
     gt = row.rename(
         {
             "r_gt_m": "radius",
@@ -61,15 +61,15 @@ def _eval_point_cloud(filename: Path, row: pd.Series, args: argparse.Namespace):
     res = filters.pcd_by_cone(
         pcd, config.radius_m + config.inlier_threshold_m, center_m
     )
-    t3 = datetime.now()
+    t3 = datetime.now(timezone.utc)
     try:
         sphere = detect.sphere(res["pcd"], config, gt_center=center_m)
     except RuntimeWarning as e:
         log.warning(f"Skipping {filename}: {e}")
-        t4 = datetime.now()
+        t4 = datetime.now(timezone.utc)
         log.debug(aux.times_summary([t0, t1, t2, t3, t4], "Time with exception"))
         return results
-    t4 = datetime.now()
+    t4 = datetime.now(timezone.utc)
     log.debug(aux.times_summary([t0, t1, t2, t3, t4], "Time for sphere detection"))
 
     if sphere.inlier_ratio > 1.0:
@@ -136,6 +136,7 @@ def main(args: argparse.Namespace):
     log.remove()
     log.add(sys.stderr, level="DEBUG" if args.debug else "WARNING")
 
+    np.random.seed(args.seed)
     log.info("Starting script...")
 
     # Collect metadata
@@ -156,6 +157,9 @@ def main(args: argparse.Namespace):
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--debug", action="store_true")
+    argparser.add_argument(
+        "--seed", type=int, default=0, help="RNG seed for RANSAC sphere fitting"
+    )
     argparser.add_argument("--sensor", choices=["all", "qb2_0", "qb2_1"], default="all")
     argparser.add_argument(
         "--file-meta", type=Path, default=data.root() / "analysis/metadata_3d.csv"

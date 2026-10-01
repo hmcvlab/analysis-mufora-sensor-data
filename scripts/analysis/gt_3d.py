@@ -15,6 +15,8 @@ from rich.progress import Progress
 
 from mufora import aux, data, table
 
+ROOT = Path(__file__).parent.parent.parent
+
 
 def main(args: argparse.Namespace):
     """Main function."""
@@ -91,6 +93,6 @@ if __name__ == "__main__":
         "--file-output", type=Path, default=data.root() / "analysis/gt_3d.csv"
     )
     argparser.add_argument(
-        "--dir-input", type=Path, default=data.root() / "annotate/ball/3d/labels"
+        "--dir-input", type=Path, default=ROOT / "data/annotations/3d"
     )
     main(argparser.parse_args())

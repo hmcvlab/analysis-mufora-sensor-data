@@ -4,7 +4,7 @@ Copyright (c) 2024 Munich University of Applied Sciences
 """
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -62,9 +62,11 @@ class Calibration:
             self.whitelist = [""]
 
 
-def from_files(file_calib: Path = None, file_metadata: Path = None) -> Calibration:
+def from_files(
+    file_calib: Path | None = None, file_metadata: Path | None = None
+) -> Calibration:
     """Load settings from yaml file."""
-    t0 = datetime.now()
+    t0 = datetime.now(timezone.utc)
     if file_calib is None:
         log.warning(f"Calibration file not provided: {file_calib}")
         data_calib = {}
@@ -73,7 +75,7 @@ def from_files(file_calib: Path = None, file_metadata: Path = None) -> Calibrati
         with open(file_calib, encoding="utf-8") as f:
             data_calib = yaml.safe_load(f)
 
-    t1 = datetime.now()
+    t1 = datetime.now(timezone.utc)
 
     if file_metadata is None:
         log.info(f"Metadata file not provided: {file_metadata}")
@@ -91,7 +93,7 @@ def from_files(file_calib: Path = None, file_metadata: Path = None) -> Calibrati
             "intrinsic": tmp_data["cam_left"]["intrinsic"],
             "distortion": tmp_data["cam_left"]["distortion"],
         }
-    t2 = datetime.now()
+    t2 = datetime.now(timezone.utc)
 
     # Merge
     data = {}
