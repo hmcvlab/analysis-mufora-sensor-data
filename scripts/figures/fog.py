@@ -208,7 +208,12 @@ def main(args: argparse.Namespace):
     df_fog = pd.read_csv(args.file_fog)
     df_meta = pd.read_csv(args.file_meta_2d)
 
-    df_fog["datetime"] = pd.to_datetime(df_fog["datetime"], utc=True)
+    try:
+        df_fog["datetime"] = pd.to_datetime(
+            df_fog["datetime"], utc=True, format="mixed"
+        )
+    except ValueError:
+        df_fog["datetime"] = pd.to_datetime(df_fog["datetime"], utc=True)
     df_meta["datetime"] = pd.to_datetime(df_meta["datetime"], utc=True)
     df_fog["day"] = df_fog["datetime"].dt.date
     df_meta["day"] = df_meta["datetime"].dt.date

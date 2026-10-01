@@ -4,6 +4,7 @@ Copyright (c) 2024 Munich University of Applied Sciences
 """
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import cv2
 import numpy as np
@@ -13,20 +14,26 @@ import torch
 from loguru import logger as log
 from skimage import feature
 from sklearn.neighbors import KDTree
-from transformers import DetrForObjectDetection, DetrImageProcessor
 
 from mufora import filters
 from mufora.settings import Calibration
+
+if TYPE_CHECKING:
+    from transformers import DetrForObjectDetection, DetrImageProcessor
 
 ROOT = Path(__file__).parent.resolve()
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 _IMG_PROC = None
 
 
-def _image_processor() -> DetrImageProcessor:
+def _image_processor() -> "DetrImageProcessor":
     """Lazily load the DETR image processor (downloads files on first call)."""
     global _IMG_PROC  # pylint: disable=global-statement
     if _IMG_PROC is None:
+        from transformers import (  # pylint: disable=import-outside-toplevel
+            DetrImageProcessor,
+        )
+
         _IMG_PROC = DetrImageProcessor.from_pretrained("facebook/detr-resnet-50")
     return _IMG_PROC
 
@@ -149,7 +156,7 @@ def circles(img: np.ndarray, config: Calibration | None = None) -> pd.DataFrame:
 
 
 def deep_circles(
-    img: np.ndarray, model: DetrForObjectDetection, device=DEVICE
+    img: np.ndarray, model: "DetrForObjectDetection", device=DEVICE
 ) -> pd.DataFrame:
     """Detect ball using deep learning model DETR trained on COCO data."""
     with torch.no_grad():
