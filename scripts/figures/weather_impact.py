@@ -11,12 +11,20 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from loguru import logger as log
 
 from mufora import aux, data, draw
+
+# The 'labels' parameter of boxplot() was renamed to 'tick_labels' in 3.9
+BOXPLOT_LABELS = (
+    "tick_labels"
+    if tuple(map(int, matplotlib.__version__.split(".")[:2])) >= (3, 9)
+    else "labels"
+)
 
 MIN_DATETIME = datetime(
     year=2024, month=2, day=28, hour=12, minute=10, tzinfo=timezone.utc
@@ -229,7 +237,7 @@ def group_plot(plt_data: PlotData):
             pos = sub_df["pos"].max() - sub_sub_df.pos
             bplot = ax[idx].boxplot(
                 [x_values],
-                tick_labels=[label] if idx[0] == n_other - 1 else [""],
+                **{BOXPLOT_LABELS: [label] if idx[0] == n_other - 1 else [""]},
                 patch_artist=True,
                 positions=[pos],
                 widths=0.5,

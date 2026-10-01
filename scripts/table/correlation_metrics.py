@@ -15,6 +15,7 @@ def main(args):
     """Entrypoint."""
     df_eval_2d = pd.read_csv(args.file_eval_2d)
     df_eval_3d = pd.read_csv(args.file_eval_3d)
+    df_eval_3d["metric"] = df_eval_3d["quality"]
 
     # Extract metrics columns: distance, intensity, metric and all that start with glcm_
     metric_cols = [c for c in df_eval_2d.columns if c.startswith("glcm_")]

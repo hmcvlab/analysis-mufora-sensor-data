@@ -51,8 +51,11 @@ def _reprojection_errors(df_2d, df_3d, calib_data, cols_3d_lidar) -> dict:
                 ["datetime"] + cols_2d_cam
             ]
 
-            results[date] = {}
             df_sub = df_3d[df_3d["date"] == date]
+            if df_cam.empty or df_sub.empty:
+                log.warning(f"No evaluation data for {date} - skipping")
+                continue
+            results[date] = {}
             for sensor in ["qb2_0", "qb2_1"]:
                 df_lidar = df_sub[(df_sub["sensor"] == sensor)]
                 df_lidar = df_lidar[["datetime"] + cols_3d_lidar]
@@ -244,10 +247,9 @@ def main(args: argparse.Namespace):
     # Common x-axis-label
     # fig.supylabel("Reprojection error in px")
     print(results_gt.keys())
-    date_labels = [date[:-5] for date in results_gt.keys()]
     ax[0].set_ylabel("Reprojection error in px")
-    ax[0].set_xticklabels(date_labels, rotation=0)
-    ax[1].set_xticklabels(date_labels, rotation=0)
+    for j, results in enumerate([results_gt, results_meas]):
+        ax[j].set_xticklabels([date[:-5] for date in results.keys()], rotation=0)
 
     # Common legend
     legend_handles = [
