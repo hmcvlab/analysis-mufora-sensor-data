@@ -16,7 +16,7 @@ from rich.progress import Progress
 
 from mufora import aux, data, detect, draw, filters, settings, table
 
-DATA_ROOT = data.root() / "rawdata"
+DATA_ROOT = data.rawdata()
 DB_NAME = Path(__file__).stem
 
 
@@ -47,6 +47,9 @@ def _eval_point_cloud(filename: Path, row: pd.Series, args: argparse.Namespace):
     t1 = datetime.now(timezone.utc)
     pcd = np.array(o3d.io.read_point_cloud(str(filename)).points)
     results["n_total"] = pcd.shape[0]
+    if pcd.shape[0] == 0:
+        log.warning(f"Skipping {filename}: empty or unreadable point cloud")
+        return results
 
     t2 = datetime.now(timezone.utc)
     gt = row.rename(

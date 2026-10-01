@@ -25,7 +25,7 @@ MAX_DATETIME = datetime(
     year=2024, month=5, day=29, hour=10, minute=15, tzinfo=timezone.utc
 )
 FILENAME = Path(__file__).stem
-DIR_IMAGES = data.root() / "rawdata"
+DIR_IMAGES = data.rawdata()
 
 
 def _extract_images_same_visibility(df, time_delta=pd.Timedelta(minutes=1)):

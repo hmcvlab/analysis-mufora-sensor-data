@@ -23,7 +23,7 @@ MAX_DATETIME = datetime(
     year=2024, month=5, day=29, hour=10, minute=15, tzinfo=timezone.utc
 )
 FILENAME = Path(__file__).stem
-DIR_IMAGES = data.root() / "rawdata"
+DIR_IMAGES = data.rawdata()
 
 
 def _merge(row: pd.Series) -> str:
@@ -92,7 +92,6 @@ def figure_samples(df_meta: pd.DataFrame):
 
     # Iterate over all combinations of weather and intensity
     for i, iweather in enumerate(unique_weathers):
-
         #
         df_sub = df_meta[df_meta["iweather"] == iweather]
         df_sub = df_sub[df_sub["day"] == df_sub["day"].max()]

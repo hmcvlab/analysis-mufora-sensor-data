@@ -75,7 +75,7 @@ def main(args: argparse.Namespace):
         sys.exit(1)
 
     # Dataset structure
-    dir_rawdata = root / "rawdata"
+    dir_rawdata = data.rawdata()
     check("rawdata/ directory", dir_rawdata.is_dir(), str(dir_rawdata))
     folders = data.relevant_raw_folders()
     check(
@@ -84,18 +84,25 @@ def main(args: argparse.Namespace):
         f"{len(folders)} folders matching {data.WHITELIST}",
     )
 
-    n_calib, n_png, n_pcd = 0, 0, 0
+    n_calib, n_png, n_pcd, n_pcd_empty = 0, 0, 0, 0
     for folder in folders:
         n_calib += folder.joinpath("calib.yaml").is_file()
         n_png += len(list(folder.glob("*.png")))
-        n_pcd += len(list(folder.glob("*.pcd")))
+        for pcd in folder.glob("*.pcd"):
+            n_pcd += 1
+            n_pcd_empty += pcd.stat().st_size < 100
     check(
-        "Per-folder calib.yaml",
-        n_calib == len(folders),
+        "Per-folder calib.yaml (optional, defaults are used if absent)",
+        True,
         f"{n_calib}/{len(folders)} folders",
     )
     check("Camera images (*.png)", n_png > 0, f"{n_png} files")
     check("Point clouds (*.pcd)", n_pcd > 0, f"{n_pcd} files")
+    check(
+        "Unreadable point clouds (skipped by the evaluation)",
+        True,
+        f"{n_pcd_empty} empty files (known limitation of the published archive)",
+    )
 
     # Output directory (created by the analysis scripts)
     dir_analysis = root / "analysis"

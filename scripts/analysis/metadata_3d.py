@@ -22,6 +22,7 @@ def collect_by_pattern(
     progress: Progress,
     folders: list,
     df_3d: pd.DataFrame,
+    rawdata_root: Path,
 ) -> list:
     """Collect data only by using a pattern recursively."""
     metadata = []
@@ -79,7 +80,7 @@ def collect_by_pattern(
                 "x_gt_m": float(df_3d.loc[idx_gt_3d, "x_m"].mean()),
                 "y_gt_m": float(df_3d.loc[idx_gt_3d, "y_m"].mean()),
                 "z_gt_m": float(df_3d.loc[idx_gt_3d, "z_m"].mean()),
-                "filename": f"{dirname}/{file.name}",
+                "filename": str(file.relative_to(rawdata_root)),
             }
             metadata.append(tmp_metadata)
     return metadata
@@ -100,6 +101,7 @@ def main(args: argparse.Namespace):
     aux.summary_count(df_3d)
 
     # Merge data by updating it with the new
+    rawdata_root = data.rawdata()
     folders = data.relevant_raw_folders()
 
     if args.debug:
@@ -108,8 +110,12 @@ def main(args: argparse.Namespace):
     # Iterate over folders
     metadata = []
     with Progress() as progress:
-        metadata += collect_by_pattern("*qb2_0*.pcd", progress, folders, df_3d)
-        metadata += collect_by_pattern("*qb2_1*.pcd", progress, folders, df_3d)
+        metadata += collect_by_pattern(
+            "*qb2_0*.pcd", progress, folders, df_3d, rawdata_root
+        )
+        metadata += collect_by_pattern(
+            "*qb2_1*.pcd", progress, folders, df_3d, rawdata_root
+        )
     df_meta = pd.DataFrame(metadata).sort_values("datetime")
 
     # Add fog data

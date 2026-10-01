@@ -196,3 +196,7 @@ pyrightconfig.json
 
 tmp/
 *.sql
+
+# MuFoRa dataset and generated analysis files (may be symlinks)
+data/rawdata
+data/analysis

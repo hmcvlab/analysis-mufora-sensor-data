@@ -9,9 +9,9 @@ and describes the order in which to run them.
 
 ## Prerequisites
 
-1. The MuFoRa dataset extracted so that `<dataset-root>/rawdata/` exists
-   (see [README.md](README.md#dataset)), and `MUFORA_ROOT` pointing at
-   `<dataset-root>`.
+1. The MuFoRa dataset extracted so that `data/rawdata/` or
+   `data/MuFoRa_dataset/` exists (see [README.md](README.md#dataset)) – or
+   `MUFORA_ROOT` pointing at the directory containing it.
 2. The package installed (`pip install -e .` or the dev container).
 3. Run the sanity check:
 
@@ -113,7 +113,43 @@ to override input/output paths (see `--help`).
   box plots) should match.
 - `table.save()` merges new rows into existing CSVs instead of overwriting
   them. To regenerate a table from scratch, delete the corresponding file in
-  `<dataset-root>/analysis/` first.
+  `data/analysis/` (or `$MUFORA_ROOT/analysis/` if the variable is set)
+  first.
+
+## Expected eval_3d output
+
+Some rows in `eval_3d.csv` end up with `inlier_ratio = NaN`. This is
+expected, not a bug:
+
+- In dense fog or at long distances the target produces fewer than the four
+  points required for a sphere fit.
+- The 3D ground truth is joined by `(date, distance, weather, sensor)` and
+  stems from separate reference recordings. For some folders the reference
+  position differs by more than the 0.35 m cone radius around the expected
+  ball position, so no fit is attempted.
+
+NaN rows are excluded from the figures; the original evaluation behaved the
+same way.
+
+## Published archive vs. original results
+
+`MuFoRa_dataset.zip` is a subsample of the raw recordings used for the paper
+(roughly 5× fewer files for rain, ~15× for fog/dry, and a few measurement
+sessions are omitted entirely). Because `metadata_*.py` samples frame
+*indices* (`linspace`), the reproduced CSVs contain different frames than the
+original `eval_*.csv` — per-row values cannot match exactly.
+
+The aggregated distributions do, however. Comparing medians per
+(sensor, weather, distance) cell against the original `eval_*.csv`:
+
+- `inlier_ratio` (qI): median absolute deviation ≈ 0.01; 84% of cells within
+  0.05
+- normalized entropy: median absolute deviation ≈ 0.005; 92% of cells within
+  0.05 (the largest deviations are fog cells, where visibility changes
+  during a session, so a different frame subset shifts the median)
+
+Note: ~150 `.pcd` files in the archive are empty (0 B) and are skipped by
+the eval.
 
 ## Terminology
 

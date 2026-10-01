@@ -70,6 +70,9 @@ def from_files(
     if file_calib is None:
         log.warning(f"Calibration file not provided: {file_calib}")
         data_calib = {}
+    elif not Path(file_calib).exists():
+        log.debug(f"Calibration file not found, using defaults: {file_calib}")
+        data_calib = {}
     else:
         log.debug(f"Load calibration file: {file_calib}")
         with open(file_calib, encoding="utf-8") as f:
@@ -77,12 +80,14 @@ def from_files(
 
     t1 = datetime.now(timezone.utc)
 
+    data_meta = {
+        "intrinsic": DEFAULT_INTRINSICS,
+        "distortion": [0] * 8,
+    }
     if file_metadata is None:
         log.info(f"Metadata file not provided: {file_metadata}")
-        data_meta = {
-            "intrinsic": DEFAULT_INTRINSICS,
-            "distortion": [0] * 8,
-        }
+    elif not Path(file_metadata).exists():
+        log.debug(f"Metadata file not found, using defaults: {file_metadata}")
     else:
         log.debug(f"Load metadata file: {file_metadata}")
         with open(file_metadata, encoding="utf-8") as f:

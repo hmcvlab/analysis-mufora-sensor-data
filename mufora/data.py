@@ -20,6 +20,7 @@ WHITELIST = [
     "raw_rain",
 ]
 ENV_ROOT = "MUFORA_ROOT"
+REPO_DATA = Path(__file__).resolve().parent.parent / "data"
 PATHS = [
     Path("/mnt/data/"),
     Path("/mnt/labor/"),
@@ -28,35 +29,60 @@ PATHS = [
 ]
 
 
-def root() -> Path:
-    """Return the MuFoRa dataset root (the directory containing ``rawdata/``).
+RAWDATA_DIRNAMES = ["rawdata", "MuFoRa_dataset"]
 
-    The ``MUFORA_ROOT`` environment variable takes precedence, otherwise the
-    first directory in ``PATHS`` containing ``rawdata/`` is used.
+
+def _rawdata_dir(path: Path) -> bool:
+    """Check if path contains a directory with the measurement folders."""
+    return any(path.joinpath(name).is_dir() for name in RAWDATA_DIRNAMES)
+
+
+def root() -> Path:
+    """Return the MuFoRa dataset root.
+
+    Resolution order:
+
+    1. The ``MUFORA_ROOT`` environment variable, if set.
+    2. ``data/`` inside this repository, i.e. the dataset (or a symlink to it)
+       extracted to ``data/rawdata``.
+    3. The first directory in ``PATHS`` containing ``rawdata/``.
+
+    A root is valid if it contains a ``rawdata/`` directory or the
+    ``MuFoRa_dataset/`` top-level directory of the Zenodo archive.
     """
     if env := os.environ.get(ENV_ROOT):
         root_path = Path(env)
-        if not root_path.joinpath("rawdata").exists():
+        if not _rawdata_dir(root_path):
             raise FileNotFoundError(
-                f"{ENV_ROOT}={env} does not contain a 'rawdata' directory."
+                f"{ENV_ROOT}={env} contains neither a 'rawdata' nor a "
+                "'MuFoRa_dataset' directory."
             )
         return root_path
 
-    for path in PATHS:
-        if path.joinpath("rawdata").exists():
+    for path in [REPO_DATA] + PATHS:
+        if _rawdata_dir(path):
             return path
 
     raise FileNotFoundError(
-        "MuFoRa dataset root not found. None of the default search paths "
-        f"{[str(p) for p in PATHS]} contains a 'rawdata' directory. Download "
-        "the dataset (https://doi.org/10.5281/zenodo.15016480) and point "
+        "MuFoRa dataset root not found. Download the dataset "
+        "(https://doi.org/10.5281/zenodo.15016480) and extract it so that "
+        f"'{REPO_DATA}/rawdata' exists (a symlink works too), or point "
         f"{ENV_ROOT} to it, e.g. 'export {ENV_ROOT}=/path/to/mufora'."
     )
 
 
+def rawdata() -> Path:
+    """Return the directory holding the measurement folders."""
+    base = root()
+    for name in RAWDATA_DIRNAMES:
+        if base.joinpath(name).is_dir():
+            return base.joinpath(name)
+    raise FileNotFoundError(f"No rawdata directory found in {base}")
+
+
 def relevant_raw_folders() -> list[Path]:
     """Find relevant folders for the project."""
-    folders = sorted(root().joinpath("rawdata").glob("*"))
+    folders = sorted(rawdata().rglob("*"))
     log.info(f"Found {len(folders)} folders")
     folders = list(filter(lambda x: x.is_dir(), folders))
     folders = list(filter(lambda x: any(fol in x.name for fol in WHITELIST), folders))

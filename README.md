@@ -26,34 +26,61 @@ request access via the Zenodo page). It consists of three archives:
 
 | Archive | Contents | Needed here? |
 | --- | --- | --- |
-| `MuFoRa_dataset.zip` | Camera images (`*.png`) and LiDAR point clouds (`*.pcd`) with per-folder `calib.yaml` | Yes – extract so that a `rawdata/` directory is created |
-| `extrinsics_v2.zip` | Per-day camera–LiDAR extrinsics | Already mirrored in `data/calib/` |
-| `avaerage_visibility_measurements.7z` | Visibility time series of the fog sensor | Already mirrored in `data/fog/` |
+| `MuFoRa_dataset.zip` | Camera images (`*.png`) and LiDAR point clouds (`*.pcd`) | Yes |
+| `extrinsics_v2.zip` | Per-day camera–LiDAR extrinsics | No – `data/calib/` in this repo contains a corrected version (`lidar1_to_cam0` is missing on most days in the v2 archive) |
+| `avaerage_visibility_measurements.7z` | Average visibility per distance (Excel summaries) | No – the pipeline uses the fog time series bundled in `data/fog/` |
 
 The 2D and 3D ground truth annotations of the spherical target are bundled
 with this repository in `data/annotations/`.
 
-Expected layout after extraction:
+### Setup
 
-```
-<dataset-root>/
-└── rawdata/
-    └── <YYYY-MM-DD>_<HH-MM-SS>_raw_{dry_light|dry_dark_with_car_light|fog|rain}_<dist>m[_<int>mm]/
-        ├── <timestamp_ns>_left_image.png
-        ├── <timestamp_ns>_right_image.png
-        ├── <timestamp_ns>_qb2_0.pcd      # LiDAR Ls (sparse)
-        ├── <timestamp_ns>_qb2_1.pcd      # LiDAR Ld (dense)
-        └── calib.yaml
-```
-
-Point the `MUFORA_ROOT` environment variable at `<dataset-root>` (the
-directory that contains `rawdata/`):
+Extract `MuFoRa_dataset.zip` into `data/`:
 
 ```bash
-export MUFORA_ROOT=/path/to/mufora
+unzip ~/Downloads/MuFoRa_dataset.zip -d data/
+ls data/MuFoRa_dataset
 ```
 
-Without `MUFORA_ROOT`, the fallback search paths in `mufora/data.py` are used.
+The archive keeps the recordings grouped by weather and session:
+
+```
+data/MuFoRa_dataset/
+├── fog/<YYYY-MM-DD>_<HH-MM-SS>_raw_fog_<dist>m/
+├── rain/<session>/<YYYY-MM-DD>_<HH-MM-SS>_raw_rain_<int>mm_<dist>m/
+└── dry/<day>/<dark|dim>/<YYYY-MM-DD>_<HH-MM-SS>_raw_dry_..._<dist>m/
+```
+
+Each measurement folder contains per-frame files such as
+`<timestamp_ns>_zed_zed_node_left_image_rect_color.png`,
+`<timestamp_ns>_zed_zed_node_right_image_rect_color.png`,
+`<timestamp_ns>_qb2_0_point_cloud.pcd` (LiDAR Ls, sparse) and
+`<timestamp_ns>_qb2_1_point_cloud.pcd` (LiDAR Ld, dense). Additional ZED
+files (RGB images, registered point clouds) are ignored by the pipeline.
+
+### Dataset on an external drive
+
+If you want to keep the dataset outside the repository, extract it anywhere
+and either point `MUFORA_ROOT` at the directory containing
+`MuFoRa_dataset/` (this also directs the generated `analysis/` CSVs there):
+
+```bash
+unzip ~/Downloads/MuFoRa_dataset.zip -d /mnt/data/mufora/
+export MUFORA_ROOT=/mnt/data/mufora
+```
+
+or create a symlink into `data/`:
+
+```bash
+ln -s /mnt/data/mufora/MuFoRa_dataset data/rawdata
+```
+
+Both `rawdata/` and `MuFoRa_dataset/` directory names are recognised, and
+measurement folders may sit flat or nested inside weather/session folders.
+Inside the dev containers the variable is passed through automatically, and
+`/mnt`, `/media` and your home directory are mounted, so symlinks to those
+locations keep working.
+
 Run `python scripts/check_setup.py` (or `make check`) to verify your setup.
 
 ## Installation
@@ -64,7 +91,12 @@ Python >= 3.10 is required. Two options:
    pre-configured dev containers (`.devcontainer/cpu` or
    `.devcontainer/gpu`, based on `hmcvlab/computer-vision:3.2.7`). The
    package is installed automatically via `postCreateCommand`.
-2. **Plain pip:** `pip install -e .` (add `.[dev]` for the test dependency).
+2. **Plain pip:** `pip install -e . opencv-python-headless` (add `.[dev]` for
+   the test dependency). OpenCV is not in `pyproject.toml` because the
+   devcontainer image ships its own build which a PyPI wheel would overwrite.
+   Open3D additionally needs a few system libraries; on Debian/Ubuntu install
+   `libegl1 libgl1 libusb-1.0-0` if `import open3d` fails with missing shared
+   library errors (e.g. `libEGL.so.1`).
 
 ## Reproduce the paper results
 

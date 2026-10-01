@@ -15,7 +15,7 @@ from rich.progress import Progress
 
 from mufora import aux, data, detect, pose, settings, table
 
-DATA_ROOT = data.root() / "rawdata"
+DATA_ROOT = data.rawdata()
 DB_NAME = Path(__file__).stem
 
 

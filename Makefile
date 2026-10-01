@@ -14,7 +14,6 @@ lint:
 
 test:
 	docker run --rm  \
-		--user ubuntu \
 		-w /app \
 		-v .:/app \
 		-t hmcvlab/computer-vision:3.2.7 \
